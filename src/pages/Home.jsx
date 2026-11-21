@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
-import { usePlayer } from '../context/PlayerContext';
-import SongList from '../components/SongList';
-import { fetchManifest } from '../utils/api';
-import { Play, Shuffle } from 'lucide-react';
-import './Home.css';
+import { useState, useEffect } from "react";
+import { usePlayer } from "../context/PlayerContext";
+import SongList from "../components/SongList";
+import { fetchManifest } from "../utils/api";
+import { Play, Shuffle } from "lucide-react";
+import "./Home.css";
 
 export default function Home() {
   const [songs, setSongs] = useState([]);
@@ -11,22 +11,29 @@ export default function Home() {
   const [error, setError] = useState(null);
   const { play } = usePlayer();
 
-  useEffect(() => {
+  const loadSongs = () => {
     fetchManifest()
       .then(setSongs)
       .catch(e => setError(e.message))
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    loadSongs();
   }, []);
+
+  const handleSongDeleted = (deletedKey) => {
+    setSongs(prev => prev.filter(s => s.key !== deletedKey));
+  };
 
   const playAll = () => play(songs, 0);
   const playShuffle = () => {
-    const idx = Math.floor(Math.random() * songs.length);
     const shuffled = [...songs].sort(() => Math.random() - 0.5);
     play(shuffled, 0);
   };
 
   if (loading) return <div className="page-center"><div className="spinner" /></div>;
-  if (error) return <div className="page-center error">Error: {error}<br/>Set up your R2 bucket and manifest first.</div>;
+  if (error) return <div className="page-center error">Error: {error}<br/>Make sure your B2 credentials are set on Vercel.</div>;
 
   return (
     <div className="home">
@@ -42,7 +49,7 @@ export default function Home() {
           </button>
         </div>
       </div>
-      <SongList songs={songs} queueSongs={songs} />
+      <SongList songs={songs} queueSongs={songs} onSongDeleted={handleSongDeleted} />
     </div>
   );
 }

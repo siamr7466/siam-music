@@ -1,11 +1,10 @@
-import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
-import { fetchManifest } from '../utils/api';
-import { groupByArtist } from '../utils/helpers';
-import SongList from '../components/SongList';
-import { usePlayer } from '../context/PlayerContext';
-import { Play, ChevronDown, ChevronRight } from 'lucide-react';
-import './Artists.css';
+import { useState, useEffect } from "react";
+import { fetchManifest } from "../utils/api";
+import { groupByArtist } from "../utils/helpers";
+import SongList from "../components/SongList";
+import { usePlayer } from "../context/PlayerContext";
+import { Play, ChevronDown, ChevronRight } from "lucide-react";
+import "./Artists.css";
 
 export default function Artists() {
   const [grouped, setGrouped] = useState({});
@@ -14,15 +13,25 @@ export default function Artists() {
   const [loading, setLoading] = useState(true);
   const { play } = usePlayer();
 
-  useEffect(() => {
+  const loadData = () => {
     fetchManifest().then(songs => {
       setAllSongs(songs);
       setGrouped(groupByArtist(songs));
       setLoading(false);
     }).catch(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    loadData();
   }, []);
 
   const toggle = (artist) => setOpenArtist(o => o === artist ? null : artist);
+
+  const handleSongDeleted = (deletedKey) => {
+    const updated = allSongs.filter(s => s.key !== deletedKey);
+    setAllSongs(updated);
+    setGrouped(groupByArtist(updated));
+  };
 
   if (loading) return <div className="page-center"><div className="spinner" /></div>;
 
@@ -52,7 +61,11 @@ export default function Artists() {
               </div>
               {isOpen && (
                 <div className="artist-songs">
-                  <SongList songs={songs} queueSongs={songs} />
+                  <SongList
+                    songs={songs}
+                    queueSongs={allSongs}
+                    onSongDeleted={handleSongDeleted}
+                  />
                 </div>
               )}
             </div>

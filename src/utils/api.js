@@ -1,4 +1,4 @@
-// API helpers for streaming and library management
+// API helpers for streaming, library management, and playlists
 
 export async function fetchManifest() {
   const res = await fetch('/api/manifest');
@@ -12,11 +12,52 @@ export async function fetchManifest() {
   }));
 }
 
+export async function deleteSong(key) {
+  const res = await fetch('/api/delete-song', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ key })
+  });
+
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'Failed to delete song');
+  }
+  return res.json();
+}
+
+export async function fetchPlaylists() {
+  try {
+    const res = await fetch('/api/playlists');
+    if (!res.ok) throw new Error('Failed to load playlists');
+    return res.json();
+  } catch (e) {
+    // Fallback to local storage if offline
+    const local = localStorage.getItem('siam_playlists');
+    return local ? JSON.parse(local) : [];
+  }
+}
+
+export async function savePlaylists(playlists) {
+  // Sync locally first
+  localStorage.setItem('siam_playlists', JSON.stringify(playlists));
+
+  // Sync to B2 cloud
+  try {
+    await fetch('/api/playlists', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ playlists })
+    });
+  } catch (e) {
+    console.warn('Failed to sync playlists to cloud:', e);
+  }
+}
+
 export async function uploadSongFile(file, artist, title, onProgress) {
   const cleanArtist = artist.trim() || 'Various Artists';
   const cleanTitle = title.trim() || file.name.replace(/\.[^/.]+$/, '');
   
-  // 1. Get presigned upload URL
   const initRes = await fetch('/api/upload-url', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -33,7 +74,6 @@ export async function uploadSongFile(file, artist, title, onProgress) {
 
   const { uploadUrl, key } = await initRes.json();
 
-  // 2. Upload file directly to Backblaze B2 with XMLHttpRequest for progress tracking
   await new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     xhr.open('PUT', uploadUrl, true);
@@ -59,7 +99,6 @@ export async function uploadSongFile(file, artist, title, onProgress) {
     xhr.send(file);
   });
 
-  // 3. Register song into manifest
   const addRes = await fetch('/api/add-song', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

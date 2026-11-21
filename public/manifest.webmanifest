@@ -1,0 +1,18 @@
+{
+  "name": "Siam Music Vault",
+  "short_name": "SiamMusic",
+  "description": "Personal Cloud Music Vault & Player",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#07070f",
+  "theme_color": "#07070f",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useRef, useEffect } from 'react';
+import { getPlayableUrl } from '../utils/offline';
 
 const PlayerContext = createContext();
 
@@ -73,17 +74,25 @@ export function PlayerProvider({ children }) {
     audioRef.current.volume = volume;
   }, [volume]);
 
-  const play = (songs, index = 0) => {
+  const loadAndPlaySong = async (song) => {
+    const audio = audioRef.current;
+    try {
+      const srcUrl = await getPlayableUrl(song);
+      audio.src = srcUrl;
+      audio.load();
+      await audio.play();
+      setIsPlaying(true);
+    } catch (err) {
+      console.warn('Playback error:', err);
+    }
+  };
+
+  const play = async (songs, index = 0) => {
     setQueue(songs);
     setCurrentIndex(index);
-    const audio = audioRef.current;
-    audio.src = songs[index].url;
-    audio.load();
-    audio.play().then(() => {
-      setIsPlaying(true);
-    }).catch(err => {
-      console.warn('Playback error:', err);
-    });
+    if (songs[index]) {
+      await loadAndPlaySong(songs[index]);
+    }
   };
 
   const togglePlay = () => {
@@ -95,7 +104,7 @@ export function PlayerProvider({ children }) {
     }
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (repeat === 'one') {
       audioRef.current.currentTime = 0;
       audioRef.current.play().catch(() => {});
@@ -104,29 +113,22 @@ export function PlayerProvider({ children }) {
     if (shuffle) {
       const next = Math.floor(Math.random() * queue.length);
       setCurrentIndex(next);
-      if (queue[next]) {
-        audioRef.current.src = queue[next].url;
-        audioRef.current.play().catch(() => {});
-      }
+      if (queue[next]) await loadAndPlaySong(queue[next]);
     } else {
       if (currentIndex < queue.length - 1) {
         const next = currentIndex + 1;
         setCurrentIndex(next);
-        if (queue[next]) {
-          audioRef.current.src = queue[next].url;
-          audioRef.current.play().catch(() => {});
-        }
+        if (queue[next]) await loadAndPlaySong(queue[next]);
       } else if (repeat === 'all' && queue.length > 0) {
         setCurrentIndex(0);
-        audioRef.current.src = queue[0].url;
-        audioRef.current.play().catch(() => {});
+        if (queue[0]) await loadAndPlaySong(queue[0]);
       } else {
         setIsPlaying(false);
       }
     }
   };
 
-  const handlePrev = () => {
+  const handlePrev = async () => {
     if (audioRef.current.currentTime > 3) {
       audioRef.current.currentTime = 0;
       return;
@@ -134,10 +136,7 @@ export function PlayerProvider({ children }) {
     if (currentIndex > 0) {
       const prev = currentIndex - 1;
       setCurrentIndex(prev);
-      if (queue[prev]) {
-        audioRef.current.src = queue[prev].url;
-        audioRef.current.play().catch(() => {});
-      }
+      if (queue[prev]) await loadAndPlaySong(queue[prev]);
     }
   };
 

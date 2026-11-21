@@ -1,21 +1,24 @@
+/* SongList.css */
 .song-list {
   display: flex;
   flex-direction: column;
+  gap: 2px;
 }
 
 .song-row {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px 16px;
+  padding: 8px 14px;
   border-radius: 8px;
   cursor: pointer;
   transition: background 0.15s;
+  user-select: none;
 }
 
-.song-row:hover { background: #1a1a2e; }
-.song-row--active { background: #1a1a2e; }
-.song-row--active .song-row__title { color: #9b6dff; }
+.song-row:hover { background: #161626; }
+.song-row--active { background: #18162b; }
+.song-row--active .song-row__title { color: #9b6dff; font-weight: 600; }
 
 .song-row__num {
   width: 24px;
@@ -23,6 +26,9 @@
   font-size: 13px;
   color: #666;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .song-row--active .song-row__num { color: #9b6dff; }
@@ -43,6 +49,13 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  flex: 1;
+}
+
+.song-row__title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .song-row__title {
@@ -54,15 +67,72 @@
   text-overflow: ellipsis;
 }
 
+.offline-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: #142e20;
+  color: #4ade80;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 10px;
+  border: 1px solid #1c452e;
+}
+
 .song-row__artist {
   font-size: 12px;
-  color: #666;
+  color: #777;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-/* EQ animation */
+.song-row__actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  opacity: 0.2;
+  transition: opacity 0.15s;
+}
+
+.song-row:hover .song-row__actions,
+.song-row--active .song-row__actions {
+  opacity: 1;
+}
+
+.action-btn {
+  background: none;
+  border: none;
+  color: #888;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+.action-btn:hover {
+  color: #fff;
+  background: #232338;
+}
+
+.action-btn--active {
+  color: #4ade80;
+}
+
+.action-btn--danger:hover {
+  color: #f87171;
+  background: #2d1417;
+}
+
+.spin-icon {
+  animation: spin 1s linear infinite;
+  color: #9b6dff;
+}
+
 .eq-bars {
   display: flex;
   align-items: flex-end;
@@ -82,6 +152,16 @@
 .eq-bars span:nth-child(3) { animation-delay: 0.4s; }
 
 @keyframes eq {
-  from { height: 4px; }
+  from { height: 3px; }
   to { height: 14px; }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (max-width: 768px) {
+  .song-row__actions {
+    opacity: 0.9;
+  }
 }
